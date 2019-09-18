@@ -1,0 +1,90 @@
+---
+title: "sentimentAna"
+output: html_document
+---
+## 감정분석
+
+```{r}
+rm(list=ls())
+library(wordcloud)
+library(KoNLP)
+```
+
+## 사전 불러오기
+
+```{r}
+useSejongDic()
+fname = 'D:\\RData\\30_AgainCourt.txt'
+road1 = readLines(fname)
+```
+
+## 단어 사전 준비
+
+```{r}
+pos.words = scan('D:\\RData\\pos_kor_words.txt',
+                 what = 'character',
+                 comment.char = ';')
+neg.words = scan('D:\\RData\\neg_kor_words.txt',
+                 what = 'character',
+                 comment.char = ';')
+```
+
+## 텍스트 전처리
+```{r}
+sentence <- road1
+sentence <- gsub('[[:punct:]]','', sentence)
+sentence <- gsub('[[:cntrl:]]','', sentence)
+sentence <- gsub('\\d+','', sentence)
+
+```
+## 텍스트 전처리
+
+```{r}
+wordlist <- sapply(sentence, extractNoun, USE.NAMES = F)
+words <- unlist(wordlist)
+head(words)
+length(words)
+```
+
+## 점수 확인
+
+```{r}
+pos.matches <- match(words, pos.words)
+neg.matches <- match(words, neg.words)
+
+pos.matches <- !is.na(pos.matches)
+sum(pos.matches)
+neg.matches <- !is.na(neg.matches)
+sum(neg.matches)
+score <- sum(pos.matches)-sum(neg.matches)
+```
+
+## 점수 확인
+
+```{r}
+pos_word <- words[pos.matches ]
+neg_word <- words[neg.matches ]
+
+pos_cnt <- table(pos_word)
+neg_cnt <- table(neg_word)
+
+pos_cnt_sort <- sort(pos_cnt, decreasing = T)
+neg_cnt_sort <- sort(neg_cnt, decreasing = T)
+
+barplot(pos_cnt_sort[5:0], main='긍정 단어 TOP 5', horiz=T, col=c("green", "blue", "yellow"))
+
+barplot(neg_cnt_sort[5:0], main="부정 단어 TOP 5", horiz=T, col=c("green", "blue", "yellow"))
+
+```
+## 워드클라우드
+
+```{r}
+install.packages("wordcloud2")
+library(wordcloud2)
+library(RColorBrewer)
+palette = brewer.pal(8, 'Set2')
+
+base_word2 <- as.data.frame(pos_cnt, stringsAsFactors = F)
+wordcloud2(data=base_word2, fontFamily='나눔바른고딕')
+```
+
